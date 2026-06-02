@@ -21,6 +21,9 @@
     }
   ],
   "env": {
-    "FLASK_ENV": "production"
-  }
+    "FLASK_ENV": "production",
+    "PROXY_ENABLED": "true",
+    "PROXY_API_URL": "https://proxy.scrapeops.io/v1/"
+  },
+  "envFile": [".env"]
 }

@@ -7,11 +7,20 @@ from urllib.parse import unquote
 import io
 import re
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Create Flask app with explicit template folder path
 template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=template_dir)
 CORS(app)
+
+# Proxy configuration (for Vercel deployment)
+PROXY_ENABLED = os.getenv('PROXY_ENABLED', 'false').lower() == 'true'
+PROXY_API_URL = os.getenv('PROXY_API_URL', 'https://proxy.scrapeops.io/v1/')
+PROXY_API_KEY = os.getenv('PROXY_API_KEY', '')
 
 def fetch_instagram_profile(username):
     """Fetches Instagram profile page - EXACT match to your CLI"""
@@ -36,8 +45,28 @@ def fetch_instagram_profile(username):
         'viewport-width': '1000',
     }
     url = f'https://www.instagram.com/{username}/'
-    response = requests.get(url, headers=headers)
-    return response if response.status_code == 200 else None
+    
+    # Use proxy if enabled and API key is configured
+    if PROXY_ENABLED and PROXY_API_KEY:
+        print(f'[DEBUG] Using proxy API for Instagram request')
+        params = {
+            'api_key': PROXY_API_KEY,
+            'url': url
+        }
+        try:
+            response = requests.get(PROXY_API_URL, params=params, timeout=30)
+            return response if response.status_code == 200 else None
+        except Exception as e:
+            print(f'[ERROR] Proxy request failed: {e}')
+            return None
+    else:
+        # Direct request (works locally)
+        try:
+            response = requests.get(url, headers=headers, timeout=15)
+            return response if response.status_code == 200 else None
+        except Exception as e:
+            print(f'[ERROR] Direct request failed: {e}')
+            return None
 
 def decode_url(escaped_url):
     """Decodes escaped Instagram CDN URLs - EXACT match"""
