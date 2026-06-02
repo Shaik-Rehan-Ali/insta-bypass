@@ -6,8 +6,11 @@ from bs4 import BeautifulSoup
 from urllib.parse import unquote
 import io
 import re
+import os
 
-app = Flask(__name__)
+# Create Flask app with explicit template folder path
+template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
+app = Flask(__name__, template_folder=template_dir)
 CORS(app)
 
 def fetch_instagram_profile(username):
@@ -94,7 +97,19 @@ def extract_timeline_data(html_content):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        print(f"[ERROR] Template error: {e}")
+        print(f"[DEBUG] Template folder: {template_dir}")
+        print(f"[DEBUG] Template folder exists: {os.path.exists(template_dir)}")
+        print(f"[DEBUG] index.html exists: {os.path.exists(os.path.join(template_dir, 'index.html'))}")
+        return jsonify({
+            'error': f'Template error: {str(e)}',
+            'template_dir': template_dir,
+            'template_exists': os.path.exists(template_dir),
+            'index_html_exists': os.path.exists(os.path.join(template_dir, 'index.html'))
+        }), 500
 
 @app.route('/health')
 def health():
@@ -280,4 +295,10 @@ if __name__ == '__main__':
     print("[!] This demonstrates unauthorized access to private content")
     print("\n[*] Starting server at http://localhost:5000")
     print("[*] Press Ctrl+C to stop\n")
+    print(f"[DEBUG] Template folder: {template_dir}")
+    print(f"[DEBUG] Template folder exists: {os.path.exists(template_dir)}\n")
     app.run(debug=True, host='0.0.0.0', port=5000)
+
+# For Vercel serverless function - export app directly
+# Vercel will import and use this app object
+# This line doesn't execute when running locally via app.run()
