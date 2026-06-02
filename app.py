@@ -280,4 +280,4 @@ if __name__ == '__main__':
     print("[!] This demonstrates unauthorized access to private content")
     print("\n[*] Starting server at http://localhost:5000")
     print("[*] Press Ctrl+C to stop\n")
-    app.run(debug=True, host='localhost', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
