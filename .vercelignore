@@ -1,0 +1,16 @@
+# Exclude development directories
+.git
+.gitignore
+venv
+__pycache__
+.pytest_cache
+*.pyc
+.env
+.env.local
+errors/
+DEBUG_REPORT.md
+
+# Don't exclude these (they're needed for Vercel)
+# templates/ - NEEDED
+# requirements.txt - NEEDED
+# app.py - NEEDED
