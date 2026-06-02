@@ -103,22 +103,30 @@ def extract():
     username = data.get('username', '').strip()
     
     if not username:
-        return jsonify({'error': 'Username required'}), 400
+        return jsonify({'error': 'Username required', 'success': False}), 400
     
     try:
         response = fetch_instagram_profile(username)
         if not response:
-            return jsonify({'error': f'Could not fetch profile for @{username}'}), 404
+            error_msg = f'Could not fetch profile for @{username} - Instagram may have blocked the request or account does not exist'
+            print(f'[ERROR] {error_msg}')
+            return jsonify({'error': error_msg, 'success': False}), 404
+        
+        print(f'[DEBUG] Fetched profile for {username}, response length: {len(response.text)}')
         
         timeline_data = extract_timeline_data(response.text)
         
         if not timeline_data:
-            return jsonify({'error': 'No timeline data found'}), 404
+            error_msg = 'No timeline data found - this account may be private or Instagram blocked the request'
+            print(f'[ERROR] {error_msg}')
+            return jsonify({'error': error_msg, 'success': False}), 404
         
         image_urls = extract_all_image_urls_recursive(timeline_data)
         
         if not image_urls:
-            return jsonify({'error': 'No images found'}), 404
+            error_msg = 'No images found in timeline'
+            print(f'[ERROR] {error_msg}')
+            return jsonify({'error': error_msg, 'success': False}), 404
         
         # Convert to list for JSON response
         images_list = []
@@ -166,7 +174,11 @@ def extract():
         })
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        error_msg = f'Extraction error: {str(e)}'
+        print(f'[ERROR] {error_msg}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': error_msg, 'success': False}), 500
 
 @app.route('/get_resolutions', methods=['POST'])
 def get_resolutions():
